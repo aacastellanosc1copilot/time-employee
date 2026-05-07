@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Control de Jornada - Modo Oscuro</title>
+  <style>
+    :root{
+      --bg:#0f1720; --card:#0b1220; --muted:#9aa7b2; --accent:#7c3aed; --accent-2:#06b6d4;
+      --glass: rgba(255,255,255,0.03);
+    }
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+    body{background:linear-gradient(180deg,var(--bg) 0%, #071023 100%); color:#e6eef6; display:flex; align-items:center; justify-content:center; padding:24px;}
+    .container{width:100%;max-width:980px;}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+    h1{font-size:1.25rem;margin:0}
+    .status{font-size:0.9rem;color:var(--muted)}
+    .card{background:linear-gradient(180deg,var(--card), rgba(11,18,32,0.85)); border-radius:12px;padding:20px;box-shadow:0 6px 20px rgba(2,6,23,0.6);backdrop-filter: blur(6px);border:1px solid rgba(255,255,255,0.03)}
+    .controls{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap}
+    .btn{padding:10px 16px;border-radius:10px;border:none;color:white;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+    .btn-entrance{background:linear-gradient(90deg,var(--accent),#5b21b6)}
+    .btn-exit{background:linear-gradient(90deg,var(--accent-2),#0ea5a4)}
+    .btn[disabled]{opacity:0.5;cursor:not-allowed}
+    table{width:100%;border-collapse:collapse;margin-top:18px;font-size:0.95rem}
+    th,td{padding:10px;text-align:left;border-bottom:1px dashed rgba(255,255,255,0.03);color:#d9e7ef}
+    th{color:var(--muted);font-weight:600;font-size:0.85rem}
+    .muted{color:var(--muted);font-size:0.9rem}
+    /* Responsive */
+    @media (max-width:640px){
+      header{flex-direction:column;align-items:flex-start;gap:10px}
+      .controls{width:100%}
+      .btn{flex:1;justify-content:center}
+      table, thead, tbody, th, td, tr {display:block;}
+      thead{display:none;}
+      tr{margin-bottom:12px;border-radius:8px;background:var(--glass);padding:10px}
+      td{border:none;padding:6px}
+      td::before{content:attr(data-label);display:block;font-size:0.75rem;color:var(--muted)}
+    }
+    .footer{margin-top:12px;color:var(--muted);font-size:0.85rem}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Control de Jornada</h1>
+        <div class="status">Modo oscuro · Responsive</div>
+      </div>
+      <div class="muted">Reloj: {{status.open_since if status.is_open else "Sin entrada abierta"}}</div>
+    </header>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <strong>Estado:</strong>
+          {% if status.is_open %}
+            <span style="color:#c7f9d9">Entrada abierta</span>
+            <div class="muted">Inició: {{ status.open_since }}</div>
+          {% else %}
+            <span style="color:#ffd7a6">Sin entrada abierta</span>
+          {% endif %}
+        </div>
+        <div class="controls">
+          <form method="post" action="/entrada" style="display:inline">
+            <button class="btn btn-entrance" type="submit" {% if status.is_open %}disabled{% endif %}>⏱️ Marcar Entrada</button>
+          </form>
+          <form method="post" action="/salida" style="display:inline">
+            <button class="btn btn-exit" type="submit" {% if not status.is_open %}disabled{% endif %}>✅ Marcar Salida</button>
+          </form>
+        </div>
+      </div>
+
+      <div style="margin-top:18px">
+        <h3 style="margin:0 0 8px 0">Historial</h3>
+        {% if entries %}
+        <table role="table" aria-label="Historial de jornadas">
+          <thead>
+            <tr><th>Inicio</th><th>Fin</th></tr>
+          </thead>
+          <tbody>
+          {% for e in entries %}
+            <tr>
+              <td data-label="Inicio">{{ e.start }}</td>
+              <td data-label="Fin">{{ e.end if e.end else "— (abierta)" }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+          <div class="muted">No hay registros aún. Marca tu entrada para comenzar.</div>
+        {% endif %}
+      </div>
+
+      <div class="footer">Datos guardados localmente en SQLite (sqlite:///./app.db).</div>
+    </div>
+  </div>
+</body>
+</html>
